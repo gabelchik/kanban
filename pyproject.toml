@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "kanban-saas"
+version = "0.1.0"
+description = "SaaS project management platform"
+authors = ["Leonid Kalintsev <lensuperhero@gmail.com>"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+django = "^6.0"
+djangorestframework = "^3.17"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
