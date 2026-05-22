@@ -6,9 +6,12 @@ authors = ["Leonid Kalintsev <lensuperhero@gmail.com>"]
 package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.14"
 django = "^6.0"
 djangorestframework = "^3.17"
+psycopg2-binary = "^2.9.12"
+django-environ = "^0.13.0"
+django-redis = "^6.0.0"
 
 [build-system]
 requires = ["poetry-core"]
