@@ -16,9 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from workspaces.views import AcceptInvitationView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/v1/", include("accounts.urls")),
     path("api/v1/workspaces/", include("workspaces.urls")),
+    path("api/v1/invitations/<uuid:token>/memberships/", AcceptInvitationView.as_view(), name="invitation-accept"),
 ]

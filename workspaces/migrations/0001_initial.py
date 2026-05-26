@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='MemberShip',
+            name='Membership',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('role', models.CharField(choices=[('admin', 'Admin'), ('member', 'Member')], default='member', max_length=10)),
