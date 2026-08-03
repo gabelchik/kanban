@@ -22,7 +22,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         read_only_fields = ('owner', 'created_at', 'workspace')
 
     owner_email = serializers.EmailField(source='owner.email', read_only=True)
-    members = ProjectMemberSerializer(source='members', many=True, read_only=True)
+    members = ProjectMemberSerializer(many=True, read_only=True)
 
 
 class AddProjectMemberSerializer(serializers.Serializer):

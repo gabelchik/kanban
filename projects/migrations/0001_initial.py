@@ -9,8 +9,8 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-        ('workspaces', '0005_alter_invitation_token'),
+    dependencies = [  # noqa: RUF012
+        ('workspaces', '0003_populate_owner_membership'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 

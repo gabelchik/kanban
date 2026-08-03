@@ -62,7 +62,7 @@ class Invitation(models.Model):
         related_name="invitations"
     )
     email = models.EmailField()
-    token = models.UUIDField(default=uuid.uuid4(), unique=True, editable=False)
+    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     accepted = models.BooleanField(default=False)
 
