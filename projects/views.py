@@ -1,8 +1,9 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
 
-from workspaces.models import Membership
+from workspaces.models import Membership, Workspace
 
 from .models import Project, ProjectMember
 from .permissions import IsProjectOwnerOrAdmin, IsWorkspaceMember
@@ -29,16 +30,16 @@ class ProjectListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         workspace_id = self.kwargs.get('workspace_id')
         workspace = get_object_or_404(
-            Membership.objects.filter(user=self.request.user),
-            workspace_id=workspace_id
-        ).workspace
+            Workspace,
+            id=workspace_id
+        )
 
         if not Membership.objects.filter(
-            workspace=workspace,
-            user=self.request.user,
-            role='admin'
+                workspace=workspace,
+                user=self.request.user,
+                role='admin'
         ).exists():
-            raise PermissionError("Только администратор рабочего пространства может создавать проекты")
+            raise PermissionDenied("Только администратор рабочего пространства может создавать проекты")
 
         project = serializer.save(workspace=workspace, owner=self.request.user)
 
