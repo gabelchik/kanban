@@ -1,39 +1,40 @@
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-
 from rest_framework import generics, permissions, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
-from .models import Workspace, Membership, Invitation
 from accounts.models import User
-from .permissions import IsOwnerOrAdmin
 
+from .models import Invitation, Membership, Workspace
+from .permissions import IsOwnerOrAdmin
 from .serializers import (
-    WorkspaceSerializer,
-    InvitationSerializer,
     AddMemberSerializer,
+    InvitationSerializer,
     MembershipSerializer,
+    WorkspaceSerializer,
 )
 
 
 class WorkspaceListCreateView(generics.ListCreateAPIView):
     serializer_class = WorkspaceSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]  # noqa: RUF012
 
     def get_queryset(self):
-        user = self.request.user
-        return Workspace.objects.filter(
-            Q(owner=user) | Q(memberships__user=user)
-        ).distinct()
+        return Workspace.objects.filter(memberships__user=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        workspace = serializer.save(owner=self.request.user)
+        Membership.objects.create(
+            workspace=workspace,
+            user=self.request.user,
+            role='admin'
+        )
 
 
 class WorkspaceDetailView(generics.RetrieveDestroyAPIView):
     serializer_class = WorkspaceSerializer
-    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]  # noqa: RUF012
     queryset = Workspace.objects.all()
 
 
@@ -54,8 +55,7 @@ class MembershipCreateView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
 
         workspace = self.get_serializer_context()["workspace"]
-        if not (request.user == workspace.owner or
-                Membership.objects.filter(workspace=workspace,
+        if not (Membership.objects.filter(workspace=workspace,
                                           user=request.user,
                                           role="admin").exists()):
             return Response({"detail": "Недостаточно прав"},
@@ -81,8 +81,7 @@ class InvitationCreateView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         workspace = self.get_serializer_context()["workspace"]
-        if not (self.request.user == workspace.owner or
-        Membership.objects.filter(workspace=workspace,
+        if not (Membership.objects.filter(workspace=workspace,
                                   user=self.request.user,
                                   role="admin").exists()
         ):
