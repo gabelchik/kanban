@@ -51,3 +51,70 @@ class ProjectMember(models.Model):
 
     def __str__(self):
         return f"{self.user.email} – {self.project.name} ({self.get_role_display()})"
+
+
+class Board(models.Model):
+    class Meta:
+        ordering = ['created_at']
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name='boards'
+    )
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    owner = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='owned_boards'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.project.name})"
+
+
+class Task(models.Model):
+    class Meta:
+        ordering = ['order']
+
+    STATUS_CHOICES = (
+        ('backlog', 'Backlog'),
+        ('todo', 'To Do'),
+        ('in_progress', 'In Progress'),
+        ('done', 'Done'),
+    )
+    PRIORITY_CHOICES = (
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+    )
+
+    board = models.ForeignKey(
+        Board,
+        on_delete=models.CASCADE,
+        related_name='tasks'
+    )
+    title = models.CharField(max_length=300)
+    description = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='backlog')
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
+    assignee = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='assigned_tasks'
+    )
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='created_tasks'
+    )
+    order = models.PositiveIntegerField(default=0)   # для сортировки внутри статуса
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
