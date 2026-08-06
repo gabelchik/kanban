@@ -70,17 +70,5 @@ class Invitation(models.Model):
         return f"Приглашение {self.email} в {self.workspace.name}"
 
     def send_invitation_email(self, request=None):
-        """Отправляет приглашение по email. Пока что локально в терминал,
-        позже можно заменить на Celery-задачу"""
-
-        accept_url = f"http://localhost:8000/api/v1/invitations/{self.token}/memberships/"
-        subject = f"Вас пригласили в рабочее пространство {self.workspace.name}"
-        message = (
-            f"Здравствуйте!\n\n"
-            f"Вас пригласили присоединиться к рабочему пространству «{self.workspace.name}»\n"
-            f"Перейдите по ссылке, чтобы принять приглашение: {accept_url}\n\n"
-            f"Ссылка можно открыть только 1 раз!"
-        )
-        from_email = settings.DEFAULT_FROM_EMAIL
-        recipient_list = [self.email]
-        send_mail(subject, message, from_email, recipient_list)
+        from .tasks import send_invitation_email as send_email_task
+        send_email_task.delay(self.id)

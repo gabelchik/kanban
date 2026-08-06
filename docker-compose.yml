@@ -39,8 +39,24 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - POSTGRES_HOST=postgres
-      - REDIS_HOST=redis
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - REDIS_HOST=${REDIS_HOST}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build: .
+    container_name: kanban_worker
+    restart: unless-stopped
+    command: celery -A config worker -l info
+    volumes:
+      - .:/app
+    environment:
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - REDIS_HOST=${REDIS_HOST}
     depends_on:
       postgres:
         condition: service_healthy
