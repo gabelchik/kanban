@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from accounts.models import User
 
-from .models import Project, ProjectMember
+from .models import Board, Project, ProjectMember, Task
 
 
 class ProjectMemberSerializer(serializers.ModelSerializer):
@@ -52,3 +52,26 @@ class AddProjectMemberSerializer(serializers.Serializer):
             user=user,
             role=validated_data['role']
         )
+
+
+class TaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ('id', 'title', 'description', 'status', 'priority',
+                  'executor', 'executor_email', 'created_by', 'created_by_email',
+                  'order', 'created_at', 'updated_at')
+        read_only_fields = ('created_by', 'created_at', 'updated_at')
+
+    executor_email = serializers.EmailField(source='executor.email', read_only=True)
+    created_by_email = serializers.EmailField(source='created_by.email', read_only=True)
+
+
+class BoardSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Board
+        fields = ('id', 'name', 'description', 'project', 'owner', 'owner_email',
+                  'created_at', 'tasks')
+        read_only_fields = ('owner', 'created_at', 'project')
+
+    owner_email = serializers.EmailField(source='owner.email', read_only=True)
+    tasks = TaskSerializer(many=True, read_only=True)

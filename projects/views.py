@@ -1,16 +1,23 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
-from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.response import Response
 
 from workspaces.models import Membership, Workspace
 
-from .models import Project, ProjectMember
-from .permissions import IsProjectOwnerOrAdmin, IsWorkspaceMember
+from .models import Board, Project, ProjectMember, Task
+from .permissions import (
+    IsProjectAdmin,
+    IsProjectMember,
+    IsProjectOwnerOrAdmin,
+    IsWorkspaceMember,
+)
 from .serializers import (
     AddProjectMemberSerializer,
+    BoardSerializer,
     ProjectMemberSerializer,
     ProjectSerializer,
+    TaskSerializer,
 )
 
 
@@ -48,7 +55,7 @@ class ProjectListCreateView(generics.ListCreateAPIView):
 
 class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProjectSerializer
-    permission_classes = [permissions.IsAuthenticated, IsWorkspaceMember, IsProjectOwnerOrAdmin]
+    permission_classes = [permissions.IsAuthenticated, IsWorkspaceMember, IsProjectOwnerOrAdmin]  # noqa: RUF012
     queryset = Project.objects.all()
 
     def perform_update(self, serializer):
@@ -102,3 +109,69 @@ class ProjectMemberCreateView(generics.CreateAPIView):
         output_serializer = ProjectMemberSerializer(serializer.instance)
 
         return Response(output_serializer.data, status=status.HTTP_201_CREATED)
+
+
+class BoardListCreateView(generics.ListCreateAPIView):
+    serializer_class = BoardSerializer
+    permission_classes = [permissions.IsAuthenticated]  # noqa: RUF012
+
+    def get_queryset(self):
+        project_id = self.kwargs['project_id']
+
+        return Board.objects.filter(
+            project_id=project_id,
+            project__members__user=self.request.user
+        ).distinct()
+
+    def perform_create(self, serializer):
+        project = get_object_or_404(Project, id=self.kwargs['project_id'])
+
+        if not (ProjectMember.objects.filter(project=project, user=self.request.user, role='admin').exists() or
+                Membership.objects.filter(workspace=project.workspace, user=self.request.user, role='admin').exists()):
+            raise PermissionDenied("Только администратор может создавать доски")
+
+        serializer.save(project=project, owner=self.request.user)
+
+class BoardDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = BoardSerializer
+    permission_classes = [permissions.IsAuthenticated, IsProjectMember]  # noqa: RUF012
+    queryset = Board.objects.all()
+
+    def get_permissions(self):
+        if self.request.method in ('PUT', 'PATCH', 'DELETE'):
+            return [permissions.IsAuthenticated(), IsProjectAdmin()]
+
+        return [permissions.IsAuthenticated(), IsProjectMember()]
+
+class TaskListCreateView(generics.ListCreateAPIView):
+    serializer_class = TaskSerializer
+    permission_classes = [permissions.IsAuthenticated]  # noqa: RUF012
+
+    def get_queryset(self):
+        board_id = self.kwargs['board_id']
+
+        return Task.objects.filter(
+            board_id=board_id,
+            board__project__members__user=self.request.user
+        ).distinct()
+
+    def perform_create(self, serializer):
+        board = get_object_or_404(Board, id=self.kwargs['board_id'])
+        project = board.project
+
+        if not (ProjectMember.objects.filter(project=project, user=self.request.user, role='admin').exists() or
+                Membership.objects.filter(workspace=project.workspace, user=self.request.user, role='admin').exists()):
+            raise PermissionDenied("Только администратор может создавать задачи")
+
+        serializer.save(board=board, created_by=self.request.user)
+
+class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = TaskSerializer
+    permission_classes = [permissions.IsAuthenticated, IsProjectMember]  # noqa: RUF012
+    queryset = Task.objects.all()
+
+    def get_permissions(self):
+        if self.request.method in ('PUT', 'PATCH', 'DELETE'):
+            return [permissions.IsAuthenticated(), IsProjectAdmin()]
+
+        return [permissions.IsAuthenticated(), IsProjectMember()]

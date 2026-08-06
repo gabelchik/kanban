@@ -100,12 +100,12 @@ class Task(models.Model):
     description = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='backlog')
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
-    assignee = models.ForeignKey(
+    executor = models.ForeignKey(
         User,
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name='assigned_tasks'
+        related_name='executor_tasks'
     )
     created_by = models.ForeignKey(
         User,
