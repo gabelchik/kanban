@@ -26,3 +26,24 @@ class IsProjectOwnerOrAdmin(permissions.BasePermission):
             user=request.user,
             role='admin'
         ).exists()
+
+
+class IsProjectMember(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        project = obj.board.project if hasattr(obj, 'board') else obj.project
+        user = request.user
+
+        if ProjectMember.objects.filter(project=project, user=user).exists():
+            return True
+
+        return bool(Membership.objects.filter(workspace=project.workspace, user=user, role='admin').exists())
+
+class IsProjectAdmin(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        project = obj.board.project if hasattr(obj, 'board') else obj.project
+        user = request.user
+
+        if ProjectMember.objects.filter(project=project, user=user, role='admin').exists():
+            return True
+
+        return bool(Membership.objects.filter(workspace=project.workspace, user=user, role='admin').exists())
