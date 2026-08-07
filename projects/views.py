@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, permissions, status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
@@ -22,6 +23,11 @@ from .serializers import (
 )
 
 
+@extend_schema(
+    tags=['Projects'],
+    summary='Список и создание проектов',
+    description='Возвращает проекты workspace. Для создания необходима роль администратора workspace.',
+)
 class ProjectListCreateView(generics.ListCreateAPIView):
     serializer_class = ProjectSerializer
     permission_classes = [permissions.IsAuthenticated]  # noqa: RUF012
@@ -54,6 +60,11 @@ class ProjectListCreateView(generics.ListCreateAPIView):
         ProjectMember.objects.create(project=project, user=self.request.user, role='admin')
 
 
+@extend_schema(
+    tags=['Projects'],
+    summary='Детали, обновление, удаление проекта',
+    description='Просмотр, изменение и удаление проекта. Только администраторы проекта или workspace.',
+)
 class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProjectSerializer
     permission_classes = [permissions.IsAuthenticated, IsWorkspaceMember, IsProjectOwnerOrAdmin]  # noqa: RUF012
@@ -78,6 +89,11 @@ class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
         instance.delete()
 
 
+@extend_schema(
+    tags=['Projects'],
+    summary='Добавить участника проекта',
+    description='Добавляет существующего пользователя в проект. Требует права администратора проекта или workspace.',
+)
 class ProjectMemberCreateView(generics.CreateAPIView):
     serializer_class = AddProjectMemberSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -112,6 +128,11 @@ class ProjectMemberCreateView(generics.CreateAPIView):
         return Response(output_serializer.data, status=status.HTTP_201_CREATED)
 
 
+@extend_schema(
+    tags=['Boards'],
+    summary='Список и создание досок',
+    description='Возвращает доски проекта. Создавать доски могут администраторы проекта или workspace.',
+)
 class BoardListCreateView(generics.ListCreateAPIView):
     serializer_class = BoardSerializer
     permission_classes = [permissions.IsAuthenticated]  # noqa: RUF012
@@ -140,6 +161,12 @@ class BoardListCreateView(generics.ListCreateAPIView):
             'project_id': project.id
         })
 
+
+@extend_schema(
+    tags=['Boards'],
+    summary='Детали, обновление, удаление доски',
+    description='Просмотр, изменение и удаление доски. Только администраторы проекта или workspace.',
+)
 class BoardDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = BoardSerializer
     permission_classes = [permissions.IsAuthenticated, IsProjectMember]  # noqa: RUF012
@@ -151,6 +178,12 @@ class BoardDetailView(generics.RetrieveUpdateDestroyAPIView):
 
         return [permissions.IsAuthenticated(), IsProjectMember()]
 
+
+@extend_schema(
+    tags=['Tasks'],
+    summary='Список и создание задач',
+    description='Возвращает задачи на доске. Создавать задачи могут администраторы проекта или workspace.',
+)
 class TaskListCreateView(generics.ListCreateAPIView):
     serializer_class = TaskSerializer
     permission_classes = [permissions.IsAuthenticated]  # noqa: RUF012
@@ -182,6 +215,12 @@ class TaskListCreateView(generics.ListCreateAPIView):
             'executor_id': task.executor_id
         })
 
+
+@extend_schema(
+    tags=['Tasks'],
+    summary='Детали, обновление, удаление задачи',
+    description='Просмотр и изменение задачи. При обновлении отправляется WebSocket-уведомление. Удаление – только администраторам.',
+)
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializer
     permission_classes = [permissions.IsAuthenticated, IsProjectMember]  # noqa: RUF012

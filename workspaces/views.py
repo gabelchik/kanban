@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, permissions, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -14,6 +15,11 @@ from .serializers import (
 )
 
 
+@extend_schema(
+    tags=['Workspaces'],
+    summary='Список и создание рабочих пространств',
+    description='Возвращает пространства, где пользователь участник или владелец. Для создания нужно быть аутентифицированным.',
+)
 class WorkspaceListCreateView(generics.ListCreateAPIView):
     serializer_class = WorkspaceSerializer
     permission_classes = [permissions.IsAuthenticated]  # noqa: RUF012
@@ -30,12 +36,22 @@ class WorkspaceListCreateView(generics.ListCreateAPIView):
         )
 
 
+@extend_schema(
+    tags=['Workspaces'],
+    summary='Детали, удаление рабочего пространства',
+    description='Просмотр и удаление пространства. Только владелец или администратор.',
+)
 class WorkspaceDetailView(generics.RetrieveDestroyAPIView):
     serializer_class = WorkspaceSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]  # noqa: RUF012
     queryset = Workspace.objects.all()
 
 
+@extend_schema(
+    tags=['Workspaces'],
+    summary='Добавить существующего пользователя',
+    description='Добавляет зарегистрированного пользователя в рабочее пространство. Требует права администратора workspace.',
+)
 class MembershipCreateView(generics.CreateAPIView):
     serializer_class = AddMemberSerializer
     permission_classes = [permissions.IsAuthenticated]  # noqa: RUF012
@@ -66,6 +82,11 @@ class MembershipCreateView(generics.CreateAPIView):
         return Response(output_serializer.data, status=status.HTTP_201_CREATED)
 
 
+@extend_schema(
+    tags=['Workspaces'],
+    summary='Создать приглашение',
+    description='Создаёт приглашение для нового участника (по email). Отправляет письмо со ссылкой. Доступно администраторам.',
+)
 class InvitationCreateView(generics.CreateAPIView):
     serializer_class = InvitationSerializer
     permission_classes = [permissions.IsAuthenticated]  # noqa: RUF012
@@ -89,6 +110,11 @@ class InvitationCreateView(generics.CreateAPIView):
         invitation.send_invitation_email()
 
 
+@extend_schema(
+    tags=['Workspaces'],
+    summary='Принять приглашение',
+    description='Активирует приглашение по токену. Если пользователь новый, создаёт его (требуется пароль). Добавляет в workspace.',
+)
 class AcceptInvitationView(generics.GenericAPIView):
     def post(self, request, token):
         invitation = get_object_or_404(Invitation, token=token, accepted=False)

@@ -193,4 +193,26 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'API для управления проектами, рабочими пространствами и задачами.',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+    'TAGS': [
+        {
+            'name': 'Auth',
+            'description': 'Регистрация, вход и обновление JWT токенов.'
+        },
+        {
+            'name': 'Workspaces',
+            'description': 'Рабочие пространства, участники, приглашения.'
+        },
+        {
+            'name': 'Projects',
+            'description': 'Проекты внутри рабочих пространств и их участники.'
+        },
+        {
+            'name': 'Boards',
+            'description': 'Kanban доски в проектах.'
+        },
+        {
+            'name': 'Tasks',
+            'description': 'Задачи на досках (создание, обновление, удаление).'
+        },
+    ],
 }
