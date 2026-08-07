@@ -16,6 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
+)
 
 from workspaces.views import AcceptInvitationView
 
@@ -25,4 +30,6 @@ urlpatterns = [
     path("api/v1/", include("workspaces.urls")),
     path("api/v1/", include("projects.urls")),
     path("api/v1/invitations/<uuid:token>/memberships/", AcceptInvitationView.as_view(), name="invitation-accept"),
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]

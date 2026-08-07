@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'accounts',
     'workspaces',
     'projects',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -165,6 +166,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -184,3 +186,11 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
+
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Kanban SaaS API',
+    'DESCRIPTION': 'API для управления проектами, рабочими пространствами и задачами.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
