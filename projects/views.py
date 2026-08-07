@@ -3,6 +3,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
+from notifications.utils import send_workspace_notification
 from workspaces.models import Membership, Workspace
 
 from .models import Board, Project, ProjectMember, Task
@@ -130,7 +131,14 @@ class BoardListCreateView(generics.ListCreateAPIView):
                 Membership.objects.filter(workspace=project.workspace, user=self.request.user, role='admin').exists()):
             raise PermissionDenied("Только администратор может создавать доски")
 
-        serializer.save(project=project, owner=self.request.user)
+        board = serializer.save(project=project, owner=self.request.user)
+
+        send_workspace_notification(project.workspace_id, {
+            'action': 'board_created',
+            'board_id': board.id,
+            'board_name': board.name,
+            'project_id': project.id
+        })
 
 class BoardDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = BoardSerializer
@@ -163,7 +171,16 @@ class TaskListCreateView(generics.ListCreateAPIView):
                 Membership.objects.filter(workspace=project.workspace, user=self.request.user, role='admin').exists()):
             raise PermissionDenied("Только администратор может создавать задачи")
 
-        serializer.save(board=board, created_by=self.request.user)
+        task = serializer.save(board=board, created_by=self.request.user)
+
+        send_workspace_notification(project.workspace_id, {
+            'action': 'task_created',
+            'task_id': task.id,
+            'title': task.title,
+            'status': task.status,
+            'priority': task.priority,
+            'executor_id': task.executor_id
+        })
 
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializer
@@ -175,3 +192,14 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
             return [permissions.IsAuthenticated(), IsProjectAdmin()]
 
         return [permissions.IsAuthenticated(), IsProjectMember()]
+
+    def perform_update(self, serializer):
+        task = serializer.save()
+        send_workspace_notification(task.board.project.workspace_id, {
+            'action': 'task_updated',
+            'task_id': task.id,
+            'title': task.title,
+            'status': task.status,
+            'priority': task.priority,
+            'executor_id': task.executor_id
+        })

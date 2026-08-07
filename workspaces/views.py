@@ -1,5 +1,3 @@
-from django.db.models import Q
-from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -40,7 +38,7 @@ class WorkspaceDetailView(generics.RetrieveDestroyAPIView):
 
 class MembershipCreateView(generics.CreateAPIView):
     serializer_class = AddMemberSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]  # noqa: RUF012
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -70,7 +68,7 @@ class MembershipCreateView(generics.CreateAPIView):
 
 class InvitationCreateView(generics.CreateAPIView):
     serializer_class = InvitationSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]  # noqa: RUF012
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
