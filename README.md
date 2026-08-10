@@ -12,6 +12,9 @@
 - **JWT аутентификация**
 - **Swagger UI**
 - **Poetry**
+- **GitHub Actions (CI/CD)**
+- **pytest**, **factory_boy**
+- **Gunicorn + Uvicorn** (production)
 
 ## Ключевые возможности
 - **Пользователи** – регистрация и аутентификация по email через JWT (access + refresh токены).
@@ -21,25 +24,44 @@
 - **Real‑time уведомления** – WebSocket (Django Channels) мгновенно оповещает всех участников рабочего пространства о новых досках, задачах и изменениях.
 - **Фоновые задачи** – Celery обрабатывает отправку приглашений, не блокируя HTTP‑ответы.
 - **API‑документация** – интерактивный Swagger UI с группировкой и описанием всех эндпоинтов.
+- **Автоматическое тестирование** – юнит-тесты с pytest + factory_boy, запускаемые в CI/CD при каждом пуше и PR.
 
 ## Быстрый старт
-1. **Клонируйте репозиторий:**
-   ```bash
-   git clone https://github.com/gabelchik/kanban-saas.git
-   cd kanban-saas
-   ```
+**Клонируйте репозиторий:**
+```bash
+git clone https://github.com/gabelchik/kanban-saas.git
+cd kanban-saas
+```
 
-2. **Запустите сервисы:**
-   ```bash
-   docker compose up -d --build
-   ```
+### Разработка
 
-3. **Откройте в браузере:**
-   - API: `http://localhost:8000/api/v1/`
-   - Swagger UI: `http://localhost:8000/api/docs/`
+**Запустите сервисы:**
+```bash
+make dev-up
+```
+
+**Откройте в браузере:**
+- API: `http://localhost:8000/api/v1/`
+- Swagger UI: `http://localhost:8000/api/docs/`
+
+### Production‑сборка
+**Запустите сервисы:**
+```bash
+make prod-up
+```
+**После запуска приложение доступно через Nginx на порту 80:**
+- API: http://localhost/api/v1/
+- Swagger UI: http://localhost/api/docs/
 
 ## Документация API
 Полное описание всех методов доступно в Swagger UI после запуска.
+
+## Запуск тестов
+**Для запуска тестов через Docker-контейнер используйте Makefile:**
+```bash
+make test
+```
+При каждом пуше в основную ветку и при создании Pull Request тесты автоматически выполняются в GitHub Actions.
 
 ## Структура проекта
 - `config/` – настройки Django, Celery, ASGI, WSGI
@@ -49,8 +71,3 @@
 - `notifications/` – WebSocket consumer, middleware, утилиты для real‑time
 - `docker-compose.yml` – сервисы: backend, worker, postgres, redis
 - `Dockerfile` – сборка образа backend/worker
-
-## Планы по развитию
-- Загрузка файлов к задачам (MinIO / S3)
-- Автотесты (pytest) и CI/CD (GitHub Actions)
-- Production‑сборка (Gunicorn + Nginx)
