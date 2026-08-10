@@ -18,6 +18,8 @@ channels = "^4.3.2"
 daphne = "^4.2.3"
 channels-redis = "^4.3.0"
 drf-spectacular = "^0.30.0"
+gunicorn = "^26.0.0"
+uvicorn = "^0.52.1"
 
 [build-system]
 requires = ["poetry-core"]

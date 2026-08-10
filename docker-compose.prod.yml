@@ -1,16 +1,14 @@
-name: kanban-dev
+name: kanban-prod
 
 services:
   postgres:
     image: postgres:17-alpine
-    container_name: kanban_postgres
-    restart: unless-stopped
+    container_name: kanban_postgres_prod
+    restart: always
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -21,10 +19,8 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: kanban_redis
-    restart: unless-stopped
-    ports:
-      - "${REDIS_PORT}:6379"
+    container_name: kanban_redis_prod
+    restart: always
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -33,16 +29,18 @@ services:
 
   backend:
     build: .
-    container_name: kanban_backend
-    restart: unless-stopped
-    command: daphne -b 0.0.0.0 -p 8000 config.asgi:application
+    container_name: kanban_backend_prod
+    restart: always
+    entrypoint: /entrypoint.sh
+    command: gunicorn config.asgi:application -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 --log-level=info
     volumes:
-      - .:/app
-    ports:
-      - "8000:8000"
+      - ./staticfiles:/app/staticfiles
     environment:
       - POSTGRES_HOST=${POSTGRES_HOST}
       - REDIS_HOST=${REDIS_HOST}
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
     depends_on:
       postgres:
         condition: service_healthy
@@ -51,19 +49,31 @@ services:
 
   worker:
     build: .
-    container_name: kanban_worker
-    restart: unless-stopped
+    container_name: kanban_worker_prod
+    restart: always
     command: celery -A config worker -l info
-    volumes:
-      - .:/app
     environment:
       - POSTGRES_HOST=${POSTGRES_HOST}
       - REDIS_HOST=${REDIS_HOST}
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  nginx:
+    image: nginx:alpine
+    container_name: kanban_nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./staticfiles:/app/staticfiles:ro
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:
